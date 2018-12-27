@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AgentR.Hubs
+namespace AgentR.Server
 {
   internal static class Extensions
   {

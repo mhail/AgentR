@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using MediatR;
-using AgentR.Hubs;
+using AgentR.Server;
 
 namespace Server
 {

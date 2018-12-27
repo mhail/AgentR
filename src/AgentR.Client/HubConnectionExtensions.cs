@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using MediatR;
 using System.Threading;
 
-namespace AgentR
+namespace AgentR.Client
 {
     public static class HubConnectionExtensions
     {

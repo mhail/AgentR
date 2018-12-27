@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace AgentR
+namespace AgentR.Client
 {
     public static class Diagnostics
     {

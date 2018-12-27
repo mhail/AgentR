@@ -8,7 +8,7 @@ using MediatR;
 
 using Server.Requests;
 
-using AgentR;
+using AgentR.Client;
 using System.Diagnostics;
 
 namespace Client {
@@ -28,8 +28,8 @@ namespace Client {
     }
     public async Task<Unit> Handle(MainRequest request, CancellationToken cancellationToken)
         {
-            AgentR.Diagnostics.Tracer.Listeners.Add(ConsoleListner);
-            AgentR.Diagnostics.Tracer.Switch.Level = SourceLevels.All;
+            AgentR.Client.Diagnostics.Tracer.Listeners.Add(ConsoleListner);
+            AgentR.Client.Diagnostics.Tracer.Switch.Level = SourceLevels.All;
 
             var connection = new HubConnectionBuilder()
                 .WithUrl("http://localhost:5000/agentr")

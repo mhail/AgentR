@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Collections.Concurrent;
 
-namespace AgentR.Hubs
+namespace AgentR.Server
 {
     public interface IRequestCallbackCordinator
     {

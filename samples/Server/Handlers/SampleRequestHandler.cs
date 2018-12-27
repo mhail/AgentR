@@ -1,6 +1,6 @@
 using System;
 using MediatR;
-using AgentR.Hubs;
+using AgentR.Server;
 using Server.Requests;
 using Microsoft.AspNetCore.SignalR;
 namespace Server.Handlers {

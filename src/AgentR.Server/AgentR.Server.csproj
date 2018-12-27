@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <AssemblyName>AgentR.Server</AssemblyName>
+    <PackageId>AgentR.Server</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\AgentR\Shared.cs" Link="Shared.cs" />
+    <Compile Include="..\AgentR.Client\Shared.cs" Link="Shared.cs" />
   </ItemGroup>
 
 </Project>

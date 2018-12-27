@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AgentR.Hubs\AgentR.Hubs.csproj" />
+    <ProjectReference Include="..\..\src\AgentR.Server\AgentR.Server.csproj" />
     <ProjectReference Include="..\Server.Requests\Server.Requests.csproj" />
   </ItemGroup>
 
