@@ -5,17 +5,17 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E219E75D-D37A-4071-A89D-AFA2E6D1DAF7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgentR", "src\AgentR\AgentR.csproj", "{14D36353-E2EF-48BB-8154-D3AD7CF68F3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgentR.Client", "src\AgentR.Client\AgentR.Client.csproj", "{14D36353-E2EF-48BB-8154-D3AD7CF68F3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgentR.Hubs", "src\AgentR.Hubs\AgentR.Hubs.csproj", "{866666CF-8371-4F2F-B99E-93C48776E522}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgentR.Server", "src\AgentR.Server\AgentR.Server.csproj", "{866666CF-8371-4F2F-B99E-93C48776E522}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{A85BAA0E-E8F1-4C7F-A043-DE5039F9F4E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "samples\Client\Client.csproj", "{3AC39859-55BC-45A5-A75B-1C3D29B52C39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleClient", "samples\Client\Client.csproj", "{3AC39859-55BC-45A5-A75B-1C3D29B52C39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "samples\Server\Server.csproj", "{E7157DC7-D1E5-4144-9E24-1711C8BC6C54}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServer", "samples\Server\Server.csproj", "{E7157DC7-D1E5-4144-9E24-1711C8BC6C54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server.Requests", "samples\Server.Requests\Server.Requests.csproj", "{0FE1336A-9D1A-4326-AA72-D9217949F4D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServer.Requests", "samples\Server.Requests\Server.Requests.csproj", "{0FE1336A-9D1A-4326-AA72-D9217949F4D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
