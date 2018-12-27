@@ -7,33 +7,31 @@ using System.Collections.Concurrent;
 
 namespace AgentR.Hubs
 {
+    public interface IRequestCallbackCordinator
+    {
+        Task<int> CreateCallback<TResult>(TaskCompletionSource<TResult> taskCompletionSource);
+        Task<bool> Accept(int id, string ConnectionId);
+        Task<bool> Response(int id, object response, string connectionId);
+        Task<bool> Error(int id, Exception ex, string connectionId);
+    }
+
     public class AgentHub : Hub
     {
-        internal class RequestCallback
-        {
-            public RequestCallback(Func<Object, Exception, bool> callback) {
-                this.Callback = callback;
-            }
-            public Func<Object, Exception, bool> Callback { get;}
+        private readonly IRequestCallbackCordinator cordinator;
 
-            public string AcceptedClient {get; set; }
+        internal AgentHub(IRequestCallbackCordinator cordinator)
+        {
+            this.cordinator = cordinator ?? throw new ArgumentNullException(nameof(IRequestCallbackCordinator));
         }
 
-
-        static ConcurrentDictionary<long, RequestCallback> callbacks = new ConcurrentDictionary<long, RequestCallback>();
-        
-        static ConcurrentDictionary<long, RequestCallback> accepted = new ConcurrentDictionary<long, RequestCallback>();
-        
-        static long callbacksId = 1;
-
-        public AgentHub()
+        public AgentHub() : this(InMemoryCallbackCordinator.Instance)
         {
         }
 
 
         public override async Task OnConnectedAsync()
         {
-            await Clients.Caller.SendAsync("registerHandlers");
+            await Clients.Caller.SendAsync(Constants.ClientRegisterHandlersMethod);
 
             await base.OnConnectedAsync();
         }
@@ -43,51 +41,42 @@ namespace AgentR.Hubs
         {
             var group = GetGroupName(registration.RequestType, registration.ResponseType);
 
-            Console.WriteLine($"{Context.ConnectionId} handeling {group}");
+            Diagnostics.Tracer.TraceInformation($"{Context.ConnectionId} handeling {group}");
 
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
             return new AgentMethodRegistration{
                 RequestMethod = GetAgentMethodName(registration.RequestType, registration.ResponseType),
-
             };
         }
 
+        /// <summary>
+        /// Called by the client to accept handeling a request
+        /// </summary>
+        /// <returns>True to instruct the client to fufill the request. 
+        /// Only one client will recieve a successfull result
+        /// </returns>
+        /// <param name="callbackId">Callback identifier.</param>
         [HubMethodName(Constants.HubAcceptRequestMethod)]
-        public async Task<bool> accept(long id) {
-            if (callbacks.TryRemove(id, out RequestCallback callback)) {
-                while (!accepted.TryAdd(id, callback)) {
-                    await Task.Delay(1);
-                }
-                callback.AcceptedClient = Context.ConnectionId;
+        public Task<bool> AcceptRequest(int callbackId) {
 
-                Console.WriteLine($"Request {id} accepted by {callback.AcceptedClient}");
-
-                return true;
-            }
-            return false;
+            return cordinator.Accept(callbackId, Context.ConnectionId);
         }
 
-        public bool response(long id, object result)
+        [HubMethodName(Constants.HubReturnResponseMethod)]
+        public Task<bool> ResultResponse(int id, object response)
         {
-            Console.WriteLine("Received response");
+            Diagnostics.Tracer.TraceInformation("Received response");
 
-            if (accepted.TryGetValue(id, out RequestCallback callback))
-            {
-                return callback.Callback(result, null);
-            }
-            return false;
+            return cordinator.Response(id, response, Context.ConnectionId);
         }
 
-        public bool responseError(long id, Exception ex)
+        [HubMethodName(Constants.HubReturnErrorMethod)]
+        public Task<bool> ResultError(int id, Exception ex)
         {
             Console.WriteLine("Received error");
 
-            if (accepted.TryGetValue(id, out RequestCallback callback))
-            {
-                return callback.Callback(null, ex);
-            }
-            return false;
+            return cordinator.Error(id, ex, Context.ConnectionId);
         }
 
         public static string GetGroupName(Type request, Type result)
@@ -99,55 +88,5 @@ namespace AgentR.Hubs
         {
             return $"request_{request.FullName}_{result.FullName}";
         }
-
-        
-
-        public static async Task<R> Handle<T, R>(IHubContext<AgentHub> hub, T request, CancellationToken cancellationToken) where T : IRequest<R>
-        {
-            long id = Interlocked.Increment(ref callbacksId);
-
-            var completion = new TaskCompletionSource<R>();
-            var group = GetGroupName(typeof(T), typeof(R));
-
-            while (! callbacks.TryAdd(id, new RequestCallback( CompletionCallback)) ) {
-                await Task.Delay(1);
-            }
-
-            var client = hub.Clients.Group(group);
-
-            Console.WriteLine($"sending request {id}");
-
-            await client.SendAsync(GetAgentMethodName(typeof(T), typeof(R)), id, request, cancellationToken);
-
-            var result = await completion.Task;
-
-            return result;
-
-            bool CompletionCallback(object r, Exception ex)
-            {
-                if (null != ex)
-                {
-                    accepted.TryRemove(id, out _);
-                    return completion.TrySetException(ex);
-                }
-                else
-                {
-                    switch (r)
-                    {
-                        case R v:
-                            accepted.TryRemove(id, out _);
-                            return completion.TrySetResult(v);
-                        case Newtonsoft.Json.Linq.JObject jobject:
-                            accepted.TryRemove(id, out _);
-                            return completion.TrySetResult(jobject.ToObject<R>());
-                        default:
-                            accepted.TryRemove(id, out _);
-                            return completion.TrySetException(new ArgumentOutOfRangeException("result", r, ""));
-
-                    }
-                }
-            }
-        }
-
     }
 }

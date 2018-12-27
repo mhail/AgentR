@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 
 namespace AgentR {
+
   internal static class  Constants {
     public const string ClientRegisterHandlersMethod = "registerHandlers";
     public const string HubRegisterHandlerMethod = "handeling";

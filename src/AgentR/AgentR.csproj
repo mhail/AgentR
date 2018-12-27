@@ -3,6 +3,23 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+
+    <!--> Packaging options <-->
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>$(VersionSuffix)</VersionSuffix>
+    <AssemblyName>AgentR.Client</AssemblyName>
+    <PackageId>AgentR.Client</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <Authors>Matthew Hail</Authors>
+    <Description>Remote agents for MediatR with SignalR.</Description>
+    <Copyright>Copyright 2018</Copyright>
+    <PackageLicenseUrl>https://github.com/mhail/AgentR/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/mhail/AgentR</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mhail/AgentR</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
