@@ -1,6 +1,8 @@
 # AgentR
 Remote Handler Agents for [MediatR](https://github.com/jbogard/MediatR) using SignalR Core
 
+![Super Cool Hero Image](AgentR.svg)
+
 ## MediatR + SignalR = AgentR
 
 Q: Why would I need this? 
@@ -14,7 +16,7 @@ A: You want to handle mediator requests in a separate process/container/machine 
 
  Q: Is this ready for production?
  
- A: TLDR; No, but it is being developed and have great plans to test out the scenarios mentioned above. 
+ A: TLDR; No, but it is in active development with plans to test out the scenarios mentioned above. 
 
  Q: What is the current state?
  
