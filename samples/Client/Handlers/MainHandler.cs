@@ -10,6 +10,7 @@ using Server.Requests;
 
 using AgentR.Client;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Client {
   // This is the entry point for the client sample
@@ -33,6 +34,10 @@ namespace Client {
 
             var connection = new HubConnectionBuilder()
                 .WithUrl("http://localhost:5000/agentr")
+                .ConfigureLogging(logging => {
+                    logging.SetMinimumLevel(LogLevel.Information);
+                    logging.AddConsole();
+                })
                 .Build();
 
             connection.Closed += async (error) =>
@@ -47,9 +52,13 @@ namespace Client {
 
             await connection.StartAsync();
 
+            var info = await connection.SendRequest(new ServerInfoRequest());
+
+            Console.WriteLine($"Server key is: '{info.Key}'");
+
             // Wait for any requests
             do {
-              await Task.Delay(1000);
+              await Task.Delay(TimeSpan.FromSeconds(1));
             } while (Console.Read() <= 0);
 
             await connection.StopAsync();

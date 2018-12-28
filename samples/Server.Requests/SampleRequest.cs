@@ -13,4 +13,14 @@ namespace Server.Requests
     {
         public string Property2 { get; set; }
     }
+
+    public class ServerInfo
+    {
+        public string Key { get; set; }
+    }
+
+    public class ServerInfoRequest : IRequest<ServerInfo>
+    {
+
+    }
 }

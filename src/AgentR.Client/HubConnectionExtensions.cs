@@ -35,6 +35,11 @@ namespace AgentR.Client
             });
         }
 
+        public static Task<TResponse> SendRequest<TResponse>(this HubConnection connection, IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken))  
+        {
+            return connection.InvokeAsync<TResponse>(Constants.HubAgentRequestMethod, request.GetType(), typeof(TResponse), request, cancellationToken); 
+        }
+
         internal static async Task<bool> AcceptRequest(this HubConnection connection, int callbackId)
         {
             var result = await connection.InvokeAsync<bool>(Constants.HubAcceptRequestMethod, callbackId);

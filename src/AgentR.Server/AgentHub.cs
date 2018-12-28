@@ -18,13 +18,15 @@ namespace AgentR.Server
     public class AgentHub : Hub
     {
         private readonly IRequestCallbackCordinator cordinator;
+        private readonly IMediator mediator;
 
-        internal AgentHub(IRequestCallbackCordinator cordinator)
+        internal AgentHub(IMediator mediator, IRequestCallbackCordinator cordinator)
         {
+            this.mediator = mediator ?? throw new ArgumentNullException(nameof(IMediator));
             this.cordinator = cordinator ?? throw new ArgumentNullException(nameof(IRequestCallbackCordinator));
         }
 
-        public AgentHub() : this(InMemoryCallbackCordinator.Instance)
+        public AgentHub(IMediator mediator) : this(mediator, InMemoryCallbackCordinator.Instance)
         {
         }
 
@@ -37,7 +39,7 @@ namespace AgentR.Server
         }
 
         [HubMethodName(Constants.HubRegisterHandlerMethod)]
-        public async Task<AgentMethodRegistration> handeling(AgentHandlerRegistration registration)
+        public async Task<AgentMethodRegistration> RegisterHandler(AgentHandlerRegistration registration)
         {
             var group = GetGroupName(registration.RequestType, registration.ResponseType);
 
@@ -74,9 +76,28 @@ namespace AgentR.Server
         [HubMethodName(Constants.HubReturnErrorMethod)]
         public Task<bool> ResultError(int id, Exception ex)
         {
-            Console.WriteLine("Received error");
+            Diagnostics.Tracer.TraceInformation("Received error");
 
             return cordinator.Error(id, ex, Context.ConnectionId);
+        }
+
+        [HubMethodName(Constants.HubAgentRequestMethod)]
+        public async Task<object> ClientRequest(Type requestType, Type responseType, object request) 
+        {
+
+            switch (request)
+            {
+                case Newtonsoft.Json.Linq.JObject jobject:
+
+                    request = jobject.ToObject(requestType);
+                    break;
+            }
+
+            Diagnostics.Tracer.TraceInformation($"Received clientRequest<{requestType}, {responseType}> {request}");
+
+            var result = await mediator.Send(responseType, request);
+
+            return result;
         }
 
         public static string GetGroupName(Type request, Type result)
