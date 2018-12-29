@@ -1,12 +1,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
 using MediatR;
 using Server.Requests;
 
-namespace Client.Handlers {
-  public class SampleRequestHandler : IRequestHandler<SampleRequest> {
+namespace Client.Handlers
+{
+    public class SampleRequestHandler : IRequestHandler<SampleRequest> {
       public async Task<Unit> Handle(SampleRequest request, CancellationToken cancellationToken)
       {
         Console.WriteLine($"SampleRequest Property1: {request.Property1}");
@@ -22,5 +22,5 @@ namespace Client.Handlers {
 
         return Unit.Value;
       }
-  }
+    }
 }

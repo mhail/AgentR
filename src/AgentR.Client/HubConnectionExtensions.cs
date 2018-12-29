@@ -1,16 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Threading.Tasks;
 using MediatR;
 using System.Threading;
 
-namespace AgentR.Client
+namespace AgentR.Client.SignalR
 {
     public static class HubConnectionExtensions
     {
         public static void HandleRequest<TRequest, TResponse>(this HubConnection connection, IMediator mediator) where TRequest : IRequest<TResponse>
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            mediator = mediator ?? throw new ArgumentNullException(nameof(IMediator));
+
             // Await the server to request registering any handlers
             connection.OnRegisterHandlers(async () =>
             {
@@ -35,31 +37,44 @@ namespace AgentR.Client
             });
         }
 
-        public static Task<TResponse> SendRequest<TResponse>(this HubConnection connection, IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken))  
+        public static Task<TResponse> SendRequest<TResponse>(this HubConnection connection, IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return connection.InvokeAsync<TResponse>(Constants.HubAgentRequestMethod, request.GetType(), typeof(TResponse), request, cancellationToken); 
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            request = request ?? throw new ArgumentNullException(nameof(IRequest<TResponse>));
+
+            return connection.InvokeAsync<TResponse>(Constants.HubAgentRequestMethod, request.GetType(), typeof(TResponse), request, cancellationToken);
         }
 
         internal static async Task<bool> AcceptRequest(this HubConnection connection, int callbackId)
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+
             var result = await connection.InvokeAsync<bool>(Constants.HubAcceptRequestMethod, callbackId);
             return result;
         }
 
         internal static async Task<bool> ReturnResponse(this HubConnection connection, int callbackId, object response)
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+
             var result = await connection.InvokeAsync<bool>(Constants.HubReturnResponseMethod, callbackId, response);
             return result;
         }
 
         internal static async Task<bool> ReturnError(this HubConnection connection, int callbackId, Exception ex)
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            ex = ex ?? throw new ArgumentNullException(nameof(Exception));
+
             var result = await connection.InvokeAsync<bool>(Constants.HubReturnErrorMethod, callbackId, ex);
             return result;
         }
 
         internal static async Task<IDisposable> RegisterHandler<TRequest, TResponse>(this HubConnection connection, Action<int, TRequest> callback) where TRequest : IRequest<TResponse>
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            callback = callback ?? throw new ArgumentNullException(nameof(Action<int, TRequest>));
+
             // register the request and response type with the server
             var registration = await connection.InvokeAsync<AgentMethodRegistration>(Constants.HubRegisterHandlerMethod, new AgentHandlerRegistration
             {
@@ -84,11 +99,17 @@ namespace AgentR.Client
 
         internal static IDisposable OnRegisterHandlers(this HubConnection connection, Action callback)
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            callback = callback ?? throw new ArgumentNullException(nameof(Action));
+
             return connection.On(Constants.ClientRegisterHandlersMethod, callback);
         }
 
         internal static async Task<bool> SendResponse<TResponse>(this HubConnection connection, int callbackId, Func<Task<TResponse>> callback)
         {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            callback = callback ?? throw new ArgumentNullException(nameof(Func<Task<TResponse>>));
+
             try
             {
                 var response = callback();
