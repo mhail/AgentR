@@ -12,6 +12,7 @@ namespace AgentR
         public const string HubReturnResponseMethod = "response";
         public const string HubReturnErrorMethod = "responseError";
         public const string HubAgentRequestMethod = "agentRequest";
+        public const string HubAgentNotificationMethod = "agentNotification";
     }
 
     public class AgentHandlerRegistration

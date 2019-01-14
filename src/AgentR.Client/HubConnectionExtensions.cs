@@ -45,6 +45,14 @@ namespace AgentR.Client.SignalR
             return connection.InvokeAsync<TResponse>(Constants.HubAgentRequestMethod, request.GetType(), typeof(TResponse), request, cancellationToken);
         }
 
+        public static Task SendNotification<TNotification>(this HubConnection connection, TNotification notification, CancellationToken cancellationToken = default(CancellationToken)) where TNotification : INotification
+        {
+            connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));
+            if (null == notification) throw new ArgumentNullException(nameof(TNotification));
+
+            return connection.InvokeAsync(Constants.HubAgentNotificationMethod, typeof(TNotification), notification, cancellationToken);
+        }
+
         internal static async Task<bool> AcceptRequest(this HubConnection connection, int callbackId)
         {
             connection = connection ?? throw new ArgumentNullException(nameof(HubConnection));

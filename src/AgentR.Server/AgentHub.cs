@@ -82,22 +82,36 @@ namespace AgentR.Server
         }
 
         [HubMethodName(Constants.HubAgentRequestMethod)]
-        public async Task<object> ClientRequest(Type requestType, Type responseType, object request) 
+        public async Task<object> ClientRequest(Type requestType, Type responseType, object request)
         {
-
-            switch (request)
-            {
-                case Newtonsoft.Json.Linq.JObject jobject:
-
-                    request = jobject.ToObject(requestType);
-                    break;
-            }
+            request = CastToType(requestType, request);
 
             Diagnostics.Tracer.TraceInformation($"Received clientRequest<{requestType}, {responseType}> {request}");
 
             var result = await mediator.Send(responseType, request);
 
             return result;
+        }
+
+        [HubMethodName(Constants.HubAgentNotificationMethod)]
+        public async Task ClientNotification(Type notificationType, object notification)
+        {
+            notification = CastToType(notificationType, notification);
+
+            await mediator.Publish(notification);
+        }
+
+        internal static object CastToType(Type type, object obj)
+        {
+            switch (obj)
+            {
+                case Newtonsoft.Json.Linq.JObject jobject:
+
+                    obj = jobject.ToObject(type);
+                    break;
+            }
+
+            return obj;
         }
 
         public static string GetGroupName(Type request, Type result)

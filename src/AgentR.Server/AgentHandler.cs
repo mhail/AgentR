@@ -28,9 +28,11 @@ namespace AgentR.Server
 
             var completion = new TaskCompletionSource<TResponse>();
 
-            var callbackid = await storage.CreateCallback(completion);
+            cancellationToken.Register(completion.SetCanceled);
 
-            var clients = hub.GetClientsForRequest<TRequest, TResponse>();
+            var clients = await GetClientsForRequest(request, cancellationToken);
+
+            var callbackid = await storage.CreateCallback(completion);
 
             Diagnostics.Tracer.TraceInformation($"sending request {callbackid}");
 
@@ -40,5 +42,19 @@ namespace AgentR.Server
 
             return result;
         }
-  }
+
+        /// <summary>
+        /// Gets the clients for request, this is mrthod that can be overidden
+        /// to allow for furthur filtering of the clients that can respond to 
+        /// the request.
+        /// </summary>
+        /// <returns>The clients that can respond to the request</returns>
+        /// <param name="request">Request.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        protected virtual Task<IClientProxy> GetClientsForRequest(TRequest request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult( hub.GetClientsForRequest<TRequest, TResponse>() );
+        }
+
+    }
 }

@@ -15,6 +15,7 @@ namespace AgentR.Client
         Task StopAsync();
         void HandleRequest<TRequest, TResponse>() where TRequest : IRequest<TResponse>;
         Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken));
+        Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default(CancellationToken)) where TNotification : INotification;
     }
 
     public class AgentClient : IAgentClient
@@ -29,6 +30,11 @@ namespace AgentR.Client
         }
 
         public void HandleRequest<TRequest, TResponse>() where TRequest : IRequest<TResponse> => connection.HandleRequest<TRequest, TResponse>(this.mediator);
+
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+        {
+            return connection.SendNotification(notification, cancellationToken);
+        }
 
         public Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
