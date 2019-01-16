@@ -17,31 +17,23 @@ namespace Client
     // This is the entry point for the client sample
     public class MainHandler : IRequestHandler<MainRequest>
     {
-
-        public static readonly TraceListener ConsoleListner = new TextWriterTraceListener(Console.OpenStandardOutput(), "console")
-        {
-            Filter = new System.Diagnostics.EventTypeFilter(System.Diagnostics.SourceLevels.All)
-        };
-
+        private readonly ILogger logger;
         private readonly IMediator mediator;
         private readonly IAgentClient agentClient;
 
-        public MainHandler(IMediator mediator, IAgentClient agentClient)
+        public MainHandler(IMediator mediator, IAgentClient agentClient, ILogger<MainHandler> logger)
         {
             this.mediator = mediator;
             this.agentClient = agentClient;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         public async Task<Unit> Handle(MainRequest request, CancellationToken cancellationToken)
         {
-            AgentR.Client.Diagnostics.Tracer.Listeners.Add(ConsoleListner);
-            AgentR.Client.Diagnostics.Tracer.Switch.Level = SourceLevels.All;
-
-
-            await agentClient.StartAsync();
+            await agentClient.TryConnect();
 
             var info = await mediator.Send(new ServerInfoRequest());
 
-            Console.WriteLine($"Server key is: '{info.Key}'");
+            logger.LogInformation($"Server key is: '{info.Key}'");
 
             // Wait for any requests
             do
@@ -51,7 +43,7 @@ namespace Client
 
             await agentClient.StopAsync();
 
-            ConsoleListner.Flush();
+            logger.LogInformation("Exit");
             return Unit.Value;
         }
     }

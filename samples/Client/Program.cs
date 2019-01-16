@@ -17,6 +17,8 @@ namespace Client
         {
             base.ConfigureServices(serviceCollection);
 
+            serviceCollection.AddLogging(configure => configure.AddConsole());
+
             serviceCollection.AddAgentR(config => {
                 config
                     .Connection
@@ -29,7 +31,7 @@ namespace Client
                 config.HandleRequest<SampleRequest, Unit>();
                 config.HandleRequest<SampleRequest2, Unit>();
                 var r = new Random();
-                config.ReconnectIn(() => TimeSpan.FromSeconds(r.Next(1, 5)));
+                config.ReconnectIn(_ => TimeSpan.FromSeconds(r.Next(1, 5)));
             });
         }
     }

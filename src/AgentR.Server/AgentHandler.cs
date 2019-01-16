@@ -32,15 +32,42 @@ namespace AgentR.Server
 
             var clients = await GetClientsForRequest(request, cancellationToken);
 
-            var callbackid = await storage.CreateCallback(completion);
+            var callbackid = await storage.CreateCallback<TRequest, TResponse>(request, completion);
 
             Diagnostics.Tracer.TraceInformation($"sending request {callbackid}");
 
-            await clients.SendRequest<TRequest, TResponse>(callbackid, request, cancellationToken);
+            await AwaitAccepted(request, clients, callbackid, cancellationToken);
 
             var result = await completion.Task;
 
             return result;
+        }
+
+        protected virtual async Task AwaitAccepted(TRequest request, IClientProxy clients, int callbackid, CancellationToken cancellationToken)
+        {
+            await clients.SendRequest<TRequest, TResponse>(callbackid, request, cancellationToken);
+
+            bool accepted = false;
+            int i = 0; 
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                accepted = await storage.IsAccepted(callbackid);
+
+                if (accepted) break;
+
+                await WaitForClientsToAccept(i);
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await clients.SendRequest<TRequest, TResponse>(callbackid, request, cancellationToken);
+            } while (!accepted);
+        }
+
+        protected virtual async Task WaitForClientsToAccept(int i)
+        {
+            await Task.Delay(1 + ( 2 * i % 11));
         }
 
         /// <summary>

@@ -13,9 +13,33 @@ namespace AgentR.Client
     {
         Task StartAsync();
         Task StopAsync();
+        bool IsConnected { get; }
         void HandleRequest<TRequest, TResponse>() where TRequest : IRequest<TResponse>;
         Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default(CancellationToken));
         Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default(CancellationToken)) where TNotification : INotification;
+    }
+
+    public static class AgentClientExtensions
+    {
+        public static async Task TryConnect(this IAgentClient client, Func<int, Exception, TimeSpan> callback = null)
+        {
+            callback = callback ?? defaultCallback;
+            int i = 0;
+
+            while (!client.IsConnected)
+            {
+                try
+                {
+                    await client.StartAsync();
+                } catch (Exception ex)
+                {
+                    await Task.Delay(callback(i, ex));
+                }
+            }
+
+
+            TimeSpan defaultCallback(int n, Exception ex) => TimeSpan.FromSeconds(1 + n % 10);
+        }
     }
 
     public class AgentClient : IAgentClient
@@ -44,5 +68,7 @@ namespace AgentR.Client
         public Task StartAsync() => connection.StartAsync();
 
         public Task StopAsync() => connection.StopAsync();
+
+        public bool IsConnected => connection.State == HubConnectionState.Connected;
     }
 }

@@ -120,7 +120,7 @@ namespace AgentR.Client.SignalR
 
             try
             {
-                var response = callback();
+                var response = await callback();
 
                 // Send the result to the server
                 return await connection.ReturnResponse(callbackId, response);

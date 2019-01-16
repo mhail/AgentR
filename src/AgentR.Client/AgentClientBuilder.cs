@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using AgentR.Client.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace AgentR.Client
 {
@@ -11,7 +12,7 @@ namespace AgentR.Client
     {
         IHubConnectionBuilder Connection { get; }
         void HandleRequest<TRequest, TResponse>() where TRequest : IRequest<TResponse>;
-        void ReconnectIn(Func<TimeSpan> callback);
+        void ReconnectIn(Func<int, TimeSpan> callback);
     }
 
     public static class ServiceCollectionExtensions
@@ -54,16 +55,32 @@ namespace AgentR.Client
             return connection;
         }
 
-        public void ReconnectIn(Func<TimeSpan> callback)
+        public void ReconnectIn(Func<int, TimeSpan> callback)
         {
             OnConnectionCreated += AttachHandleReconnectInConnection;
 
             void AttachHandleReconnectInConnection(HubConnection cxn, IServiceProvider serviceProvider) 
             {
+                var logger = serviceProvider.GetService<ILogger<AgentClientBuilder>>() ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AgentClientBuilder>.Instance;
                 cxn.Closed += async (error) =>
                 {
-                    await Task.Delay(callback());
-                    await cxn.StartAsync();
+                    logger.LogDebug("Disconnected");
+
+                    int i = 0;
+                    while (cxn.State != HubConnectionState.Connected)
+                    {
+                        await Task.Delay(callback(i));
+
+                        logger.LogDebug("Reconnecting");
+                        try
+                        {
+                            await cxn.StartAsync();
+                        } catch (Exception ex)
+                        {
+                            logger.LogCritical(ex, "Reconnect Failed");
+                        }
+                        i++;
+                    }
                 };
             }
 

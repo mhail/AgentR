@@ -4,15 +4,18 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AgentR.Server
 {
     public interface IRequestCallbackCordinator
     {
-        Task<int> CreateCallback<TResult>(TaskCompletionSource<TResult> taskCompletionSource);
+        Task<int> CreateCallback<TRequest, TResponse>(TRequest request, TaskCompletionSource<TResponse> taskCompletionSource);
         Task<bool> Accept(int id, string ConnectionId);
         Task<bool> Response(int id, object response, string connectionId);
         Task<bool> Error(int id, Exception ex, string connectionId);
+        Task<bool> IsAccepted(int id);
     }
 
     public class AgentHub : Hub

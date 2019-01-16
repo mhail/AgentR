@@ -9,9 +9,9 @@ namespace AgentR.Server
     {
         public static readonly IRequestCallbackCordinator Instance = new InMemoryCallbackCordinator();
 
-        private readonly ConcurrentDictionary<long, RequestCallback> callbacks = new ConcurrentDictionary<long, RequestCallback>();
+        private readonly ConcurrentDictionary<int, RequestCallback> callbacks = new ConcurrentDictionary<int, RequestCallback>();
 
-        private readonly ConcurrentDictionary<long, RequestCallback> accepted = new ConcurrentDictionary<long, RequestCallback>();
+        private readonly ConcurrentDictionary<int, RequestCallback> accepted = new ConcurrentDictionary<int, RequestCallback>();
 
         private int callbacksId = 1;
 
@@ -32,11 +32,38 @@ namespace AgentR.Server
             return false;
         }
 
-        public async Task<int> CreateCallback<TResult>(TaskCompletionSource<TResult> taskCompletionSource)
+        public async Task<int> CreateCallback<TRequest, TResponse>(TRequest request, TaskCompletionSource<TResponse> taskCompletionSource)
         {
             var id = Interlocked.Increment(ref callbacksId);
 
-            var callback = new RequestCallback(CompletionCallback);
+            bool CompletionCallback(object r, Exception ex)
+            {
+                try
+                {
+                    if (null != ex) return taskCompletionSource.TrySetException(ex);
+
+                    switch (r)
+                    {
+                        case TResponse v:
+                            accepted.TryRemove(id, out _);
+                            return taskCompletionSource.TrySetResult(v);
+                        case Newtonsoft.Json.Linq.JObject jobject:
+                            accepted.TryRemove(id, out _);
+                            return taskCompletionSource.TrySetResult(jobject.ToObject<TResponse>());
+                        default:
+                            accepted.TryRemove(id, out _);
+                            return taskCompletionSource.TrySetException(new ArgumentOutOfRangeException("result", r, ""));
+
+                    }
+
+                }
+                finally
+                {
+                    accepted.TryRemove(id, out _);
+                }
+            }
+
+            var callback = new RequestCallback<TRequest>(id, CompletionCallback, request);
 
             while (!callbacks.TryAdd(id, callback))
             {
@@ -44,31 +71,6 @@ namespace AgentR.Server
             }
 
             return id;
-
-            bool CompletionCallback(object r, Exception ex)
-            {
-                if (null != ex)
-                {
-                    accepted.TryRemove(id, out _);
-                    return taskCompletionSource.TrySetException(ex);
-                }
-                else
-                {
-                    switch (r)
-                    {
-                        case TResult v:
-                            accepted.TryRemove(id, out _);
-                            return taskCompletionSource.TrySetResult(v);
-                        case Newtonsoft.Json.Linq.JObject jobject:
-                            accepted.TryRemove(id, out _);
-                            return taskCompletionSource.TrySetResult(jobject.ToObject<TResult>());
-                        default:
-                            accepted.TryRemove(id, out _);
-                            return taskCompletionSource.TrySetException(new ArgumentOutOfRangeException("result", r, ""));
-
-                    }
-                }
-            }
         }
 
         public Task<bool> Error(int id, Exception ex, string connectionId)
@@ -82,6 +84,12 @@ namespace AgentR.Server
                 return Task.FromResult(callback.Callback(null, ex));
             }
             return Task.FromResult(false);
+        }
+
+        public Task<bool> IsAccepted(int id)
+        {
+            var isAccepted = accepted.ContainsKey(id) || !callbacks.ContainsKey(id);
+            return Task.FromResult(isAccepted);
         }
 
         public Task<bool> Response(int id, object response, string connectionId)
@@ -99,14 +107,33 @@ namespace AgentR.Server
 
         internal class RequestCallback
         {
-            public RequestCallback(Func<Object, Exception, bool> callback)
+            private readonly Func<Object, Exception, bool> callback;
+            private readonly int id;
+
+            public RequestCallback(int id, Func<Object, Exception, bool> callback)
             {
-                this.Callback = callback;
+                this.id = id;
+                this.callback = callback;
             }
-            public Func<Object, Exception, bool> Callback { get; }
+
+            public int Id => this.id;
+
+            public Func<Object, Exception, bool> Callback => this.callback;
 
             public string AcceptedClient { get; set; }
 
+        }
+
+        internal class RequestCallback<TRequest> : RequestCallback
+        {
+            private readonly TRequest request;
+            public RequestCallback(int id, Func<Object, Exception, bool> callback, TRequest request)
+                : base(id, callback)
+            {
+                this.request = request;
+            }
+
+            public TRequest Request => this.request;
         }
     }
 }
