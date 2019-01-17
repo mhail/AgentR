@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("UnitTests")]
+
 namespace AgentR.Server
 {
     public class AgentHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
