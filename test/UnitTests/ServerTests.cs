@@ -45,7 +45,7 @@ namespace UnitTests
             // Assert
             Assert.AreEqual(Unit.Value, result);
 
-            TheServerShouldHaveAllocatedACallbackForTheClient();
+            TheServerShouldHaveAllocatedACallbackForTheClient(request);
 
             TheServerShouldHaveSentTheRequestToTheClient();
 
@@ -85,7 +85,7 @@ namespace UnitTests
 
         void TheServerShouldHaveCheckedTheReuestWasAccepted() => StorageIsAccepted.MustHaveHappened();
 
-        void TheServerShouldHaveAllocatedACallbackForTheClient() => ConfigureCallbackFor<TestRequest, Unit>(request).MustHaveHappened();
+        void TheServerShouldHaveAllocatedACallbackForTheClient(TestRequest request) => ConfigureCallbackFor<TestRequest, Unit>(request).MustHaveHappened();
         #endregion
     }
 }

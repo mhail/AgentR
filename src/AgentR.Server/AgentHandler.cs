@@ -24,7 +24,7 @@ namespace AgentR.Server
             this.storage = storage ?? throw new ArgumentNullException(nameof(IRequestCallbackCordinator));
         }
 
-        public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default(CancellationToken))
         {
             Diagnostics.Tracer.TraceInformation("AgentHandler+Handle");
 
