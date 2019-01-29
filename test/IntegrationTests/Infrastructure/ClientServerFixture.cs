@@ -48,7 +48,7 @@ namespace IntegrationTests
                 {
                     services.AddLogging(configure => configure.AddConsole());
                     services.AddSignalR();
-                    services.AddMediatR(typeof(ServerTests).Assembly);
+                    services.AddMediatR(typeof(ClientServerFixture).Assembly);
 
                     services.AddAgentR(config =>
                     {

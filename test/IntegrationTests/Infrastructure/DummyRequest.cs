@@ -7,6 +7,9 @@ using Xunit;
 
 namespace IntegrationTests
 {
+    /// <summary>
+    /// Dummy request for tracking when Handle is called.
+    /// </summary>
     public abstract class DummyRequest<T> : IRequest, IRequestHandler<T> where T : IRequest
     {
         private static ConcurrentDictionary<Type, bool> values = new ConcurrentDictionary<Type, bool>();

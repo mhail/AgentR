@@ -14,7 +14,6 @@ namespace IntegrationTests
         public async Task TestSendRequest()
         {
             // Arrange
-
             await EnsureClientConnected();
 
             // Act
