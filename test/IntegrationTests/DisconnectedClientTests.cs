@@ -11,12 +11,12 @@ namespace IntegrationTests
 
         public DisconnectedClientTests(ClientServerFixture fixture) : base(fixture) { }
 
-        [Fact]
+        [Fact(DisplayName = "Test server has inqueued request and client connects.")]
         public async Task TestSendRequest()
         {
             // Arrange
             Fixture.Client.HandleRequest<ClientRequest1, Unit>();
-
+            await EnsureServerUp();
             var sendRequestTask = Fixture.Server.SendRequest(new ClientRequest1());
 
             await Task.Delay(TimeSpan.FromSeconds(1));

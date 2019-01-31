@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -22,6 +23,26 @@ namespace IntegrationTests
             await Fixture.Client.StartAsync();
 
             AssertClientConnected();
+        }
+
+        protected async Task EnsureServerUp()
+        {
+            await Fixture.StartServer();
+
+            var client = HttpClientFactory.Create();
+
+            var request = await client.GetStringAsync(Fixture.ServerUrl);
+
+            Assert.Equal("Ok", request);
+        }
+
+        protected async Task EnsureServerDown()
+        {
+            await Fixture.StopServer();
+
+            var client = HttpClientFactory.Create();
+
+            await Assert.ThrowsAsync<HttpRequestException>(()=> client.GetStringAsync(Fixture.ServerUrl));
         }
     }
 }

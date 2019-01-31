@@ -10,10 +10,11 @@ namespace IntegrationTests
 
         public ServerTests(ClientServerFixture fixture) : base(fixture) { }
 
-        [Fact]
+        [Fact(DisplayName = "Senting request from server to client.")]
         public async Task TestSendRequest()
         {
             // Arrange
+            await EnsureServerUp();
             await EnsureClientConnected();
 
             // Act

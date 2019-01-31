@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using AgentR.Client.SignalR;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 namespace AgentR.Client
 {
@@ -75,9 +76,9 @@ namespace AgentR.Client
                         try
                         {
                             await cxn.StartAsync();
-                        } catch (Exception ex)
+                        } catch (HttpRequestException ex)
                         {
-                            logger.LogCritical(ex, "Reconnect Failed");
+                            logger.LogDebug(ex, "Reconnect Failed");
                         }
                         i++;
                     }

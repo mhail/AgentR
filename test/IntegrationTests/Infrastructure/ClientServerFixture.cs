@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Threading.Tasks;
 using AgentR.Client;
 using AgentR.Server;
 using MediatR;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,11 +26,15 @@ namespace IntegrationTests
         private readonly Lazy<IHubContext<AgentHub>> server;
         public IHubContext<AgentHub> Server => this.server.Value;
 
+        private readonly string serverUrl;
+
+        public string ServerUrl => this.serverUrl;
+
         public ClientServerFixture()
         {
-            string ServerUrl = $"http://{System.Net.IPAddress.Loopback}:{Port++}";
+            this.serverUrl = $"http://{System.Net.IPAddress.Loopback}:{Port++}";
 
-            host = CreateWebHost(ServerUrl);
+            host = CreateWebHost(serverUrl);
 
             client = new Lazy<IAgentClient>(() => host.Services.GetService<IAgentClient>());
             server = new Lazy<IHubContext<AgentHub>>(() => host.Services.GetService<IHubContext<AgentHub>>());
@@ -38,6 +44,9 @@ namespace IntegrationTests
         {
             host.StopAsync(TimeSpan.FromSeconds(1)).Wait();
         }
+
+        public Task StartServer() => host.StartAsync();
+        public Task StopServer() => host.StopAsync(TimeSpan.FromSeconds(10));
 
         static IWebHost CreateWebHost(string url)
         {
@@ -69,8 +78,15 @@ namespace IntegrationTests
                         // set up the AgentR Hub
                         routes.MapHub<AgentHub>(hubPath);
                     });
+
+                    app.Run(async context =>
+                    {
+                        await context.Response.WriteAsync("Ok");
+                    });
                 })
-                .Start(url);
+                .UseUrls(url)
+                .Build();
+                //.Start(url);
         }
     }
 }
