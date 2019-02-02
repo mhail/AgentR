@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,13 +49,15 @@ namespace IntegrationTests
         public Task StartServer() => host.StartAsync();
         public Task StopServer() => host.StopAsync(TimeSpan.FromSeconds(10));
 
-        static IWebHost CreateWebHost(string url)
-        {
-            string hubPath = "/agentr";
+        protected static readonly string HubPath = "/agentr";
 
+        protected IWebHost CreateWebHost(string url)
+        {
             return WebHost.CreateDefaultBuilder()
-                .ConfigureServices((services) =>
+                .ConfigureServices(services =>
                 {
+                    ConfigureServices(services, url);
+
                     services.AddLogging(configure => configure.AddConsole());
                     services.AddSignalR();
                     services.AddMediatR(typeof(ClientServerFixture).Assembly);
@@ -63,20 +66,26 @@ namespace IntegrationTests
                     {
                         config
                             .Connection
-                            .WithUrl(url + hubPath);
+                            .WithUrl(url + HubPath, options =>
+                            {
+                                ConfigureClientOptions(options);
+                            });
                         var r = new Random();
                         config.ReconnectIn(_ => TimeSpan.FromSeconds(r.Next(1, 5)));
+
                     });
 
                 })
                 .Configure(app =>
                 {
+                    ConfigureApp(app, url);
+
                     app.UseDeveloperExceptionPage();
 
                     app.UseSignalR(routes =>
                     {
                         // set up the AgentR Hub
-                        routes.MapHub<AgentHub>(hubPath);
+                        routes.MapHub<AgentHub>(HubPath);
                     });
 
                     app.Run(async context =>
@@ -86,7 +95,24 @@ namespace IntegrationTests
                 })
                 .UseUrls(url)
                 .Build();
-                //.Start(url);
+            //.Start(url);
+        }
+
+
+
+        protected virtual void ConfigureServices(IServiceCollection services, string url)
+        {
+
+        }
+
+        protected virtual void ConfigureApp(IApplicationBuilder app, string url)
+        {
+
+        }
+
+        protected virtual void ConfigureClientOptions(HttpConnectionOptions options)
+        {
+
         }
     }
 }

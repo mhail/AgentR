@@ -20,7 +20,14 @@ namespace AgentR.Client.SignalR
                 await connection.RegisterHandler<TRequest, TResponse>(async (callbackId, request) =>
                 {
                     // Accept the request, blocking any other agents
-                    var accepted = await connection.AcceptRequest(callbackId);
+                    var accepted = false;
+                    
+                    try {
+                        accepted = await connection.AcceptRequest(callbackId);
+                    } catch (System.Net.WebSockets.WebSocketException) {
+                        // TODO: Adding escape hatch from integration tests. Server is disconnecting during the AcceptRequest call. 
+                        return;
+                    }
 
                     if (!accepted)
                     {

@@ -16,6 +16,11 @@ namespace IntegrationTests
 
         public static bool HandleCalled=> values.TryGetValue(typeof(T), out bool v) ? v : false;
 
+        public DummyRequest()
+        {
+            values.AddOrUpdate(typeof(T), false, (t, v) => false);
+        }
+
         public Task<Unit> Handle(T request, CancellationToken cancellationToken)
         {
             values.AddOrUpdate(typeof(T), true, (t, v) => true);

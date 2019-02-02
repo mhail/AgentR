@@ -5,11 +5,13 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public abstract class BaseTest : IClassFixture<ClientServerFixture>
-    {
-        private readonly ClientServerFixture fixture;
+   
 
-        public BaseTest(ClientServerFixture fixture)
+    public abstract class BaseTest<T> : IClassFixture<T> where T : ClientServerFixture
+    {
+        private readonly T fixture;
+
+        public BaseTest(T fixture)
         {
             this.fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
         }
@@ -43,6 +45,13 @@ namespace IntegrationTests
             var client = HttpClientFactory.Create();
 
             await Assert.ThrowsAsync<HttpRequestException>(()=> client.GetStringAsync(Fixture.ServerUrl));
+        }
+    }
+
+    public class BaseTest : BaseTest<ClientServerFixture>
+    {
+        public BaseTest(ClientServerFixture fixture) : base(fixture)
+        {
         }
     }
 }

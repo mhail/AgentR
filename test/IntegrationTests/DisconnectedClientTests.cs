@@ -5,19 +5,19 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class DisconnectedClientTests : BaseTest
-    {
-        public class ClientRequest1 : DummyRequest<ClientRequest1> { }
+    public class DisconnectedClientRequest : DummyRequest<DisconnectedClientRequest> { }
 
-        public DisconnectedClientTests(ClientServerFixture fixture) : base(fixture) { }
+    public abstract class DisconnectedClientTests<T> : BaseTest<T> where T : ClientServerFixture
+    {
+        public DisconnectedClientTests(T fixture) : base(fixture) { }
 
         [Fact(DisplayName = "Test server has inqueued request and client connects.")]
         public async Task TestSendRequest()
         {
             // Arrange
-            Fixture.Client.HandleRequest<ClientRequest1, Unit>();
+            Fixture.Client.HandleRequest<DisconnectedClientRequest, Unit>();
             await EnsureServerUp();
-            var sendRequestTask = Fixture.Server.SendRequest(new ClientRequest1());
+            var sendRequestTask = Fixture.Server.SendRequest(new DisconnectedClientRequest());
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
@@ -30,7 +30,17 @@ namespace IntegrationTests
 
             // Assert
             Assert.Equal(Unit.Value, result);
-            ClientRequest1.AssertHandled();
+            DisconnectedClientRequest.AssertHandled();
         }
+    }
+
+    public class DisconnectedClientTests : DisconnectedClientTests<ClientServerFixture> 
+    {
+        public DisconnectedClientTests(ClientServerFixture fixture) : base(fixture) { }
+    }
+
+    public class DisconnectedClientTestsWithAuth : DisconnectedClientTests<SecureClientServerFixture>
+    {
+        public DisconnectedClientTestsWithAuth(SecureClientServerFixture fixture) : base(fixture) { }
     }
 }

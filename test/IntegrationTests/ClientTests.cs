@@ -4,26 +4,38 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class ClientTests : BaseTest
-    {
-        public class ClientRequest1 : DummyRequest<ClientRequest1> { }
+    public class ClientTestsRequest : DummyRequest<ClientTestsRequest> { }
 
-        public ClientTests(ClientServerFixture fixture) : base(fixture) { }
+    public abstract class ClientTests<T> : BaseTest<T> where T : ClientServerFixture
+    {
+        public ClientTests(T fixture) : base(fixture) { }
 
         [Fact(DisplayName = "Senting request from client to server.")]
         public async Task TestSendRequest()
         {
             // Arrange
-            Fixture.Client.HandleRequest<ClientRequest1, Unit>();
+            Fixture.Client.HandleRequest<ClientTestsRequest, Unit>();
             await EnsureServerUp();
             await EnsureClientConnected();
 
             // Act
-            var result = await Fixture.Server.SendRequest(new ClientRequest1());
+            var result = await Fixture.Server.SendRequest(new ClientTestsRequest());
 
             // Assert
             Assert.Equal(Unit.Value, result);
-            ClientRequest1.AssertHandled();
+            ClientTestsRequest.AssertHandled();
         }
     }
+
+    public class ClientTests : ClientTests<ClientServerFixture> 
+    {
+         public ClientTests(ClientServerFixture fixture) : base(fixture) { }
+    }
+
+
+    public class ClientTestsWithAuth : ClientTests<SecureClientServerFixture>
+    {
+        public ClientTestsWithAuth(SecureClientServerFixture fixture) : base(fixture) { }
+    }
+
 }
