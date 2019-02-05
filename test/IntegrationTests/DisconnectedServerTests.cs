@@ -6,9 +6,9 @@ using AgentR.Client;
 
 namespace IntegrationTests
 {
-    public class DisconnectedServerRequest : DummyRequest<DisconnectedServerRequest> { }
-
-    public abstract class DisconnectedServerTests<T> : BaseTest<T> where T : ClientServerFixture
+    public abstract class DisconnectedServerTests<T, R> : BaseTest<T> 
+        where T : ClientServerFixture 
+        where R : DummyRequest<R>, new()
     {
         public DisconnectedServerTests(T fixture) : base(fixture) { }
 
@@ -18,7 +18,7 @@ namespace IntegrationTests
             // Arrange
             Assert.False(Fixture.Client.IsConnected);
             await EnsureServerDown();
-            Fixture.Client.HandleRequest<DisconnectedServerRequest, Unit>();
+            Fixture.Client.HandleRequest<R, Unit>();
 
             // Queue up the client to try and connect to the server
             var clientConnectTask = Fixture.Client.TryConnect();
@@ -29,7 +29,7 @@ namespace IntegrationTests
             await Task.Delay(TimeSpan.FromSeconds(1));
 
             // Send a request to the client
-            var sendRequestTask = Fixture.Server.SendRequest(new DisconnectedServerRequest());
+            var sendRequestTask = Fixture.Server.SendRequest(new R());
 
             // Wait for the client to connect and the result to process
             await clientConnectTask;
@@ -38,18 +38,22 @@ namespace IntegrationTests
             // Assert
             Assert.True(Fixture.Client.IsConnected);
             Assert.Equal(Unit.Value, result);
-            DisconnectedServerRequest.AssertHandled();
+            DummyRequest<R>.AssertHandled();
 
         }
     }
 
-    public class DisconnectedServerTests : DisconnectedServerTests<ClientServerFixture>
+    public class DisconnectedServerTests : DisconnectedServerTests<ClientServerFixture, DisconnectedServerTests.Request>
     {
+        public class Request : DummyRequest<Request> { }
+
         public DisconnectedServerTests(ClientServerFixture fixture) : base(fixture) { }
     }
 
-    public class DisconnectedServerTestsWithAuth : DisconnectedServerTests<SecureClientServerFixture>
+    public class DisconnectedServerTestsWithAuth : DisconnectedServerTests<SecureClientServerFixture, DisconnectedServerTestsWithAuth.Request>
     {
+        public class Request : DummyRequest<Request> { }
+
         public DisconnectedServerTestsWithAuth(SecureClientServerFixture fixture) : base(fixture) { }
     }
 }

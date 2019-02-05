@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("UnitTests")]
 
@@ -26,7 +27,7 @@ namespace AgentR.Server
 
         public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Diagnostics.Tracer.TraceInformation("AgentHandler+Handle");
+            Logging.Logger.LogInformation($"Handle<{typeof(TRequest)}>");
 
             var completion = new TaskCompletionSource<TResponse>();
 
@@ -36,7 +37,7 @@ namespace AgentR.Server
 
             var callbackid = await storage.CreateCallback<TRequest, TResponse>(request, completion);
 
-            Diagnostics.Tracer.TraceInformation($"sending request {callbackid}");
+            Logging.Logger.LogInformation($"Sending Request<{typeof(TRequest)}> {callbackid}");
 
             await AwaitAccepted(request, clients, callbackid, cancellationToken);
 

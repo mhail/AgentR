@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace AgentR.Server
 {
@@ -25,7 +26,7 @@ namespace AgentR.Server
                 }
                 callback.AcceptedClient = connectionId;
 
-                Diagnostics.Tracer.TraceInformation($"Request {id} accepted by {callback.AcceptedClient}");
+                Logging.Logger.LogInformation($"Request {id} accepted by {callback.AcceptedClient}");
 
                 return true;
             }

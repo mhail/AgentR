@@ -56,24 +56,23 @@ namespace IntegrationTests
             return WebHost.CreateDefaultBuilder()
                 .ConfigureServices(services =>
                 {
-                    ConfigureServices(services, url);
+                    ConfigureServices((IServiceCollection)services, (string)url);
 
-                    services.AddLogging(configure => configure.AddConsole());
+                    services.AddLogging((Action<ILoggingBuilder>)(configure => configure.AddConsole()));
                     services.AddSignalR();
                     services.AddMediatR(typeof(ClientServerFixture).Assembly);
-
-                    services.AddAgentR(config =>
+                    services.AddAgentR((Action<IAgentClientBuilder>)(config =>
                     {
                         config
                             .Connection
-                            .WithUrl(url + HubPath, options =>
+                            .WithUrl((string)(url + HubPath), (Action<HttpConnectionOptions>)(options =>
                             {
-                                ConfigureClientOptions(options);
-                            });
+                                ConfigureClientOptions((HttpConnectionOptions)options);
+                            }));
                         var r = new Random();
-                        config.ReconnectIn(_ => TimeSpan.FromSeconds(r.Next(1, 5)));
+                        config.ReconnectIn((Func<int, TimeSpan>)(_ => (TimeSpan)TimeSpan.FromSeconds((double)r.Next((int)1, (int)5))));
 
-                    });
+                    }));
 
                 })
                 .Configure(app =>
@@ -92,13 +91,24 @@ namespace IntegrationTests
                     {
                         await context.Response.WriteAsync("Ok");
                     });
+
+                    EnableClientLogging(app);
+                    EnableServerLogging(app);
                 })
                 .UseUrls(url)
                 .Build();
             //.Start(url);
         }
 
+        protected virtual void EnableClientLogging(IApplicationBuilder app)
+        {
+            AgentR.Client.Logging.SetFactory(app.ApplicationServices.GetService<ILoggerFactory>());
+        }
 
+        protected virtual void EnableServerLogging(IApplicationBuilder app)
+        {
+            AgentR.Server.Logging.SetFactory(app.ApplicationServices.GetService<ILoggerFactory>());
+        }
 
         protected virtual void ConfigureServices(IServiceCollection services, string url)
         {

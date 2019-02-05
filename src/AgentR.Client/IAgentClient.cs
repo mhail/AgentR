@@ -7,6 +7,7 @@ using AgentR.Client.SignalR;
 using MediatR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AgentR.Client
 {

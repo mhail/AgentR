@@ -5,9 +5,9 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class DisconnectedClientRequest : DummyRequest<DisconnectedClientRequest> { }
-
-    public abstract class DisconnectedClientTests<T> : BaseTest<T> where T : ClientServerFixture
+    public abstract class DisconnectedClientTests<T, R> : BaseTest<T>
+        where T : ClientServerFixture
+        where R : DummyRequest<R>, new()
     {
         public DisconnectedClientTests(T fixture) : base(fixture) { }
 
@@ -15,9 +15,9 @@ namespace IntegrationTests
         public async Task TestSendRequest()
         {
             // Arrange
-            Fixture.Client.HandleRequest<DisconnectedClientRequest, Unit>();
+            Fixture.Client.HandleRequest<R, Unit>();
             await EnsureServerUp();
-            var sendRequestTask = Fixture.Server.SendRequest(new DisconnectedClientRequest());
+            var sendRequestTask = Fixture.Server.SendRequest(new R());
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
@@ -30,17 +30,23 @@ namespace IntegrationTests
 
             // Assert
             Assert.Equal(Unit.Value, result);
-            DisconnectedClientRequest.AssertHandled();
+            DummyRequest<R>.AssertHandled();
         }
     }
 
-    public class DisconnectedClientTests : DisconnectedClientTests<ClientServerFixture> 
+    // Variants
+
+    public class DisconnectedClientTests : DisconnectedClientTests<ClientServerFixture, DisconnectedClientTests.Request> 
     {
+        public class Request : DummyRequest<Request> { }
+
         public DisconnectedClientTests(ClientServerFixture fixture) : base(fixture) { }
     }
 
-    public class DisconnectedClientTestsWithAuth : DisconnectedClientTests<SecureClientServerFixture>
+    public class DisconnectedClientTestsWithAuth : DisconnectedClientTests<SecureClientServerFixture, DisconnectedClientTestsWithAuth.Request>
     {
+        public class Request : DummyRequest<Request> { }
+
         public DisconnectedClientTestsWithAuth(SecureClientServerFixture fixture) : base(fixture) { }
     }
 }

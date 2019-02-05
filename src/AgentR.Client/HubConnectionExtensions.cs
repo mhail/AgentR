@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System.Threading.Tasks;
 using MediatR;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace AgentR.Client.SignalR
 {
@@ -32,13 +33,13 @@ namespace AgentR.Client.SignalR
                     if (!accepted)
                     {
                         // Another agent must have handled the request or at was canceled
-                        Diagnostics.Tracer.TraceInformation($"Hub canceled request<{typeof(TRequest)}, {typeof(TResponse)}> {callbackId}");
+                        Logging.Logger.LogInformation($"Hub Canceled Request<{typeof(TRequest)}, {typeof(TResponse)}> - Id: {callbackId}");
                         return;
                     }
 
                     bool success = await connection.SendResponse(callbackId, () => mediator.Send<TResponse>(request));
 
-                    Diagnostics.Tracer.TraceInformation($"Sent response {callbackId} - Success: {success}");
+                    Logging.Logger.LogInformation($"Sent Response<{typeof(TRequest)}, {typeof(TResponse)}> - Id: {callbackId} - Success: {success}");
 
                 });
             });
@@ -103,11 +104,11 @@ namespace AgentR.Client.SignalR
             // Await any request from the server on the method it specified for the request and response type
             var result = connection.On<int, TRequest>(registration.RequestMethod, (callbackId, request) =>
             {
-                Diagnostics.Tracer.TraceInformation($"Received request<{typeof(TRequest)}, {typeof(TResponse)}> {callbackId}");
+                Logging.Logger.LogInformation($"Received Request<{typeof(TRequest)}, {typeof(TResponse)}> - Id: {callbackId}");
                 callback(callbackId, request);
             });
 
-            Diagnostics.Tracer.TraceInformation($"Handeling <{typeof(TRequest)}, {typeof(TResponse)}> on {registration.RequestMethod}");
+            Logging.Logger.LogInformation($"Handeling <{typeof(TRequest)}, {typeof(TResponse)}> on {registration.RequestMethod}");
 
             return result;
         }

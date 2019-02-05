@@ -16,12 +16,19 @@ namespace IntegrationTests
     public class SecureClientServerFixture : ClientServerFixture
     {
         // Secret Key
-        protected static readonly SecurityKey Key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes($"I-Am-The-GateKeeper-{DateTime.UtcNow}" + new string('=', 1024)));
-        protected static readonly SigningCredentials SigningCreds = new SigningCredentials(Key, SecurityAlgorithms.HmacSha256);
+        protected readonly SecurityKey Key;
+        protected readonly SigningCredentials SigningCreds;
 
         protected ILogger<SecureClientServerFixture> logger = NullLogger<SecureClientServerFixture>.Instance;
        
-         protected override void ConfigureApp(IApplicationBuilder app, string url)
+        public SecureClientServerFixture() : base()
+        {
+            // Generate new keys for each test fixture
+            Key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes($"I-Am-The-GateKeeper-{DateTime.UtcNow}" + new string('=', 1024)));
+            SigningCreds = new SigningCredentials(Key, SecurityAlgorithms.HmacSha256);
+        }
+
+        protected override void ConfigureApp(IApplicationBuilder app, string url)
         {
             base.ConfigureApp(app, url);
 

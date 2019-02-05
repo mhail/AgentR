@@ -4,9 +4,9 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class ServerTestRequest : DummyRequest<ServerTestRequest> { }
-
-    public abstract class ServerTests<T> : BaseTest<T> where T : ClientServerFixture
+    public abstract class ServerTests<T, R> : BaseTest<T>
+        where T : ClientServerFixture
+        where R : DummyRequest<R>, new()
     {
         public ServerTests(T fixture) : base(fixture) { }
 
@@ -18,22 +18,26 @@ namespace IntegrationTests
             await EnsureClientConnected();
 
             // Act
-            var result = await Fixture.Client.SendRequest(new ServerTestRequest());
+            var result = await Fixture.Client.SendRequest(new R());
 
             // Assert
             Assert.Equal(Unit.Value, result);
 
-            ServerTestRequest.AssertHandled();
+            DummyRequest<R>.AssertHandled();
         }
     }
 
-    public class ServerTests : ServerTests<ClientServerFixture>
+    public class ServerTests : ServerTests<ClientServerFixture, ServerTests.Request>
     {
+        public class Request : DummyRequest<Request> { }
+
         public ServerTests(ClientServerFixture fixture) : base(fixture) { }
     }
 
-    public class ServerTestsWithAuth : ServerTests<SecureClientServerFixture>
+    public class ServerTestsWithAuth : ServerTests<SecureClientServerFixture, ServerTestsWithAuth.Request>
     {
+        public class Request : DummyRequest<Request> { }
+
         public ServerTestsWithAuth(SecureClientServerFixture fixture) : base(fixture) { }
     }
 }

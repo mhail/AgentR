@@ -6,6 +6,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace AgentR.Server
 {
@@ -23,7 +24,7 @@ namespace AgentR.Server
         private readonly IRequestCallbackCordinator cordinator;
         private readonly IMediator mediator;
 
-        internal AgentHub(IMediator mediator, IRequestCallbackCordinator cordinator)
+        protected AgentHub(IMediator mediator, IRequestCallbackCordinator cordinator)
         {
             this.mediator = mediator ?? throw new ArgumentNullException(nameof(IMediator));
             this.cordinator = cordinator ?? throw new ArgumentNullException(nameof(IRequestCallbackCordinator));
@@ -46,7 +47,7 @@ namespace AgentR.Server
         {
             var group = GetGroupName(registration.RequestType, registration.ResponseType);
 
-            Diagnostics.Tracer.TraceInformation($"{Context.ConnectionId} handeling {group}");
+            Logging.Logger.LogInformation($"{Context.ConnectionId} handeling {group}");
 
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
@@ -71,7 +72,7 @@ namespace AgentR.Server
         [HubMethodName(Constants.HubReturnResponseMethod)]
         public Task<bool> ResultResponse(int id, object response)
         {
-            Diagnostics.Tracer.TraceInformation("Received response");
+            Logging.Logger.LogInformation("Received response");
 
             return cordinator.Response(id, response, Context.ConnectionId);
         }
@@ -79,7 +80,7 @@ namespace AgentR.Server
         [HubMethodName(Constants.HubReturnErrorMethod)]
         public Task<bool> ResultError(int id, Exception ex)
         {
-            Diagnostics.Tracer.TraceInformation("Received error");
+            Logging.Logger.LogInformation("Received error");
 
             return cordinator.Error(id, ex, Context.ConnectionId);
         }
@@ -89,7 +90,7 @@ namespace AgentR.Server
         {
             request = CastToType(requestType, request);
 
-            Diagnostics.Tracer.TraceInformation($"Received clientRequest<{requestType}, {responseType}> {request}");
+            Logging.Logger.LogInformation($"Received clientRequest<{requestType}, {responseType}> {request}");
 
             var result = await mediator.Send(responseType, request);
 
